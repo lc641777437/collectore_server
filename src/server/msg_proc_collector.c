@@ -118,6 +118,13 @@ static int simcom_ping(const void *msg, SESSION *session)
     }
 
     LOG_INFO("device %s ping", req->imei);
+    char buf[3] = {0xa6, 0xa6, 0x02};
+
+
+    const MSG_SET_REQ *rsp = (const MSG_SET_REQ *)alloc_simcomMsg(CMD_SET, sizeof(MSG_SET_REQ) + 3);
+    memcpy(rsp->data, buf, 3);
+
+    simcom_sendMsg(rsp, sizeof(MSG_SET_REQ) + 3, session);
     return 0;
 }
 
@@ -140,10 +147,10 @@ static int simcom_data(const void *msg, SESSION *session)
         LOG_ERROR("collector_info message length not enough");
         return -1;
     }
-    LOG_INFO("device(%s) timestamp(%d)", req->imei, req->timestamp);
-    LOG_INFO("timestamp: %d", req->timestamp);
-    LOG_INFO("latitude: %f", req->latitude);
-    LOG_INFO("longitude: %f", req->longitude);
+    char imei[MAX_IMEI_LENGTH + 1] = {0};
+    memcpy(imei, req->imei, MAX_IMEI_LENGTH);
+    LOG_INFO("device(%s) timestamp(%d) lat(%f) lon(%f)",
+        imei, ntohl(req->timestamp), req->latitude, req->longitude);
     LOG_HEX(req->data, AD_DATA_LEN);
     return 0;
 }
